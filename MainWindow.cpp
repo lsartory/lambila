@@ -12,6 +12,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainW
 {
     _ui->setupUi(this);
 
+    // Restore the window sizes
+    QSettings settings;
+    restoreGeometry(settings.value("UI/geometry").toByteArray());
+    restoreState(settings.value("UI/windowState").toByteArray());
+    _ui->verticalSplitter->setStretchFactor(0, 1);
+    _ui->verticalSplitter->setStretchFactor(1, 2);
+    _ui->verticalSplitter->restoreState(settings.value("UI/verticalSplitter").toByteArray());
+    _ui->horizontalSplitter->setStretchFactor(0, 1);
+    _ui->horizontalSplitter->setStretchFactor(1, 4);
+    _ui->horizontalSplitter->restoreState(settings.value("UI/horizontalSplitter").toByteArray());
+
     _project = nullptr;
     projectNew();
 }
@@ -163,8 +174,6 @@ void MainWindow::on_actionSaveAs_triggered()
 
 void MainWindow::on_actionExit_triggered()
 {
-    if (!projectPromptSave())
-        return;
     close();
 }
 
@@ -175,4 +184,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->ignore();
     if (projectPromptSave())
         event->accept();
+
+    // Save the window sizes
+    QSettings settings;
+    settings.setValue("UI/verticalSplitter",   _ui->verticalSplitter->saveState());
+    settings.setValue("UI/horizontalSplitter", _ui->horizontalSplitter->saveState());
+    settings.setValue("UI/geometry",           saveGeometry());
+    settings.setValue("UI/windowState",        saveState());
 }
