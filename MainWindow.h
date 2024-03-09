@@ -25,6 +25,7 @@ protected:
     void projectNew();
 
 private slots:
+    void projectModifiedChanged(bool modified);
     void projectFileAdded(QFileInfo fi);
     void projectFileRemoved(QFileInfo fi);
 

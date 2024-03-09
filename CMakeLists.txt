@@ -27,6 +27,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(lila
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        resources.qrc
     )
 else()
     add_executable(lila

@@ -10,12 +10,23 @@
 
 Project::Project(QObject *parent) : QObject(parent)
 {
+    _modified = true;
     _projectFile = nullptr;
 }
 
 Project::~Project()
 {
     delete _projectFile;
+}
+
+/******************************************************************************/
+
+void Project::setModified(bool modified)
+{
+    if (modified == _modified)
+        return;
+    _modified = modified;
+    emit modifiedChanged(_modified);
 }
 
 /******************************************************************************/
@@ -55,6 +66,7 @@ void Project::saveAs(const QString &filePath)
         QMessageBox::critical(nullptr, tr("Saving failed"), tr("Failed to save file: %1").arg(file.errorString()));
         return;
     }
+    setModified(false);
 }
 
 void Project::save()
@@ -80,6 +92,7 @@ void Project::addFile(const QString &filePath)
 
     // Add the file to the list
     _files.append(fi);
+    setModified(true);
     emit fileAdded(fi);
 }
 
@@ -90,6 +103,7 @@ void Project::removeFile(const QString &filePath)
     {
         if (_files.at(i).canonicalFilePath() == filePath)
         {
+            setModified(true);
             emit fileRemoved(_files.takeAt(i));
             break;
         }

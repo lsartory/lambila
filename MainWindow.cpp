@@ -28,15 +28,22 @@ void MainWindow::projectNew()
 
     // Create a new project
     _project = new Project(this);
-    connect(_project, &Project::fileAdded,   this, &MainWindow::projectFileAdded);
-    connect(_project, &Project::fileRemoved, this, &MainWindow::projectFileRemoved);
+    connect(_project, &Project::modifiedChanged, this, &MainWindow::projectModifiedChanged);
+    connect(_project, &Project::fileAdded,       this, &MainWindow::projectFileAdded);
+    connect(_project, &Project::fileRemoved,     this, &MainWindow::projectFileRemoved);
 
     // Reset the UI
+    _ui->actionSave->setEnabled(false);
     _ui->fileTreeWidget->clear();
     _ui->fileRemoveButton->setEnabled(false);
 }
 
 /******************************************************************************/
+
+void MainWindow::projectModifiedChanged(bool modified)
+{
+    _ui->actionSave->setEnabled(modified);
+}
 
 void MainWindow::projectFileAdded(QFileInfo fi)
 {
@@ -77,7 +84,7 @@ void MainWindow::on_fileAddButton_clicked()
     {
         _project->addFile(filePath);
         const QString canonicalPath = QFileInfo(filePath).canonicalPath();
-        if (lastPath != canonicalPath)
+        if (!canonicalPath.isEmpty() && lastPath != canonicalPath)
             QSettings().setValue("lastPath", canonicalPath);
     }
 }
@@ -110,7 +117,7 @@ void MainWindow::on_actionSaveAs_triggered()
     _project->saveAs(filePath);
     const QFileInfo fi(filePath);
     const QString canonicalPath = fi.canonicalPath();
-    if (lastPath != canonicalPath)
+    if (!canonicalPath.isEmpty() && lastPath != canonicalPath)
         QSettings().setValue("lastPath", canonicalPath);
 }
 
