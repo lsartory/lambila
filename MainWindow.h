@@ -1,0 +1,41 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include "Project.h"
+
+#include <QMainWindow>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+private:
+    Ui::MainWindow *_ui;
+    Project *_project;
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+protected:
+    void projectNew();
+
+private slots:
+    void projectFileAdded(QFileInfo fi);
+    void projectFileRemoved(QFileInfo fi);
+
+    void on_fileTreeWidget_itemSelectionChanged();
+
+    void on_fileAddButton_clicked();
+    void on_fileRemoveButton_clicked();
+
+    void on_actionNew_triggered();
+    void on_actionSave_triggered();
+    void on_actionSaveAs_triggered();
+    void on_actionExit_triggered();
+};
+#endif // MAINWINDOW_H
