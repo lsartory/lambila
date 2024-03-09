@@ -1,7 +1,9 @@
 #include "MainWindow.h"
 #include "./ui_MainWindow.h"
 
+#include <QCloseEvent>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QSettings>
 
 /******************************************************************************/
@@ -21,6 +23,20 @@ MainWindow::~MainWindow()
 
 /******************************************************************************/
 
+static QString lastPath()
+{
+    return QSettings().value("lastPath", QDir::homePath()).toString();
+}
+
+static void setLastPath(const QString &path)
+{
+    const QString canonicalPath = QFileInfo(path).canonicalPath();
+    if (!canonicalPath.isEmpty() && lastPath() != canonicalPath)
+        QSettings().setValue("lastPath", canonicalPath);
+}
+
+/******************************************************************************/
+
 void MainWindow::projectNew()
 {
     if (_project)
@@ -36,6 +52,27 @@ void MainWindow::projectNew()
     _ui->actionSave->setEnabled(false);
     _ui->fileTreeWidget->clear();
     _ui->fileRemoveButton->setEnabled(false);
+}
+
+bool MainWindow::projectSaveAs()
+{
+    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"), lastPath(), tr("Lila project files (*.lila)"));
+    if (filePath.isEmpty())
+        return false;
+    if (!_project->saveAs(filePath))
+        return false;
+    setLastPath(filePath);
+    return true;
+}
+
+bool MainWindow::projectPromptSave()
+{
+    if (!_project->modified())
+        return true;
+    if (QMessageBox::question(this, tr("Save current file?"), tr("The current file was modified, do you want to save it before proceeding?")) == QMessageBox::StandardButton::Yes)
+        if (!_project->save())
+            return projectSaveAs();
+    return true;
 }
 
 /******************************************************************************/
@@ -78,14 +115,11 @@ void MainWindow::on_fileTreeWidget_itemSelectionChanged()
 
 void MainWindow::on_fileAddButton_clicked()
 {
-    const QString lastPath = QSettings().value("lastPath", QDir::homePath()).toString();
-    const QStringList filePaths = QFileDialog::getOpenFileNames(this, tr("Select file(s) to open"), lastPath, tr("VHDL files (*.vhd *.vhdl);;Verilog files (*.v)"));
+    const QStringList filePaths = QFileDialog::getOpenFileNames(this, tr("Select file(s) to add"), lastPath(), tr("VHDL files (*.vhd *.vhdl);;Verilog files (*.v)"));
     for (const QString filePath : filePaths)
     {
         _project->addFile(filePath);
-        const QString canonicalPath = QFileInfo(filePath).canonicalPath();
-        if (!canonicalPath.isEmpty() && lastPath != canonicalPath)
-            QSettings().setValue("lastPath", canonicalPath);
+        setLastPath(filePath);
     }
 }
 
@@ -99,30 +133,46 @@ void MainWindow::on_fileRemoveButton_clicked()
 
 void MainWindow::on_actionNew_triggered()
 {
-    // TODO: save?
+    if (!projectPromptSave())
+        return;
     projectNew();
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    if (!projectPromptSave())
+        return;
+    const QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
+    if (filePath.isEmpty())
+        return;
+    projectNew();
+    _project->open(filePath);
+    setLastPath(filePath);
 }
 
 void MainWindow::on_actionSave_triggered()
 {
-    _project->save();
+    if (!_project->save())
+        projectSaveAs();
 }
 
 void MainWindow::on_actionSaveAs_triggered()
 {
-    const QString lastPath = QSettings().value("lastPath", QDir::homePath()).toString();
-    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save to file"), lastPath, tr("Lila project files (*.lila)"));
-    if (filePath.isEmpty())
-        return;
-    _project->saveAs(filePath);
-    const QFileInfo fi(filePath);
-    const QString canonicalPath = fi.canonicalPath();
-    if (!canonicalPath.isEmpty() && lastPath != canonicalPath)
-        QSettings().setValue("lastPath", canonicalPath);
+    projectSaveAs();
 }
 
 void MainWindow::on_actionExit_triggered()
 {
-    // TODO: save?
+    if (!projectPromptSave())
+        return;
     close();
+}
+
+/******************************************************************************/
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    event->ignore();
+    if (projectPromptSave())
+        event->accept();
 }

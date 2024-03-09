@@ -23,6 +23,10 @@ public:
 
 protected:
     void projectNew();
+    bool projectSaveAs();
+    bool projectPromptSave();
+
+    virtual void closeEvent(QCloseEvent *event);
 
 private slots:
     void projectModifiedChanged(bool modified);
@@ -35,6 +39,7 @@ private slots:
     void on_fileRemoveButton_clicked();
 
     void on_actionNew_triggered();
+    void on_actionOpen_triggered();
     void on_actionSave_triggered();
     void on_actionSaveAs_triggered();
     void on_actionExit_triggered();

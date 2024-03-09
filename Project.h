@@ -7,7 +7,8 @@ class Project : public QObject
 {
     Q_OBJECT
 
-protected:
+private:
+    static const QString _lilaVersion;
     bool _modified;
     QFileInfo *_projectFile;
     QList<QFileInfo> _files;
@@ -20,11 +21,14 @@ protected:
     void setModified(bool);
 
 public:
-    void saveAs(const QString &filePath);
-    void save();
+    bool modified();
 
-    void addFile(const QString &filePath);
-    void removeFile(const QString &filePath);
+    bool open(const QString &filePath);
+    bool saveAs(const QString &filePath);
+    bool save();
+
+    bool addFile(const QString &filePath);
+    bool removeFile(const QString &filePath);
 
 signals:
     void modifiedChanged(bool modified);
