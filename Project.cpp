@@ -83,7 +83,7 @@ bool Project::saveAs(const QString &filePath)
     _projectFile = new QFileInfo(filePath);
     if (_projectFile->suffix().isEmpty())
         _projectFile->setFile(filePath + ".lila");
-    const QDir targetDir(_projectFile->canonicalPath());
+    const QDir targetDir(_projectFile->absolutePath());
 
     // Serialize the settings into JSON
     QJsonObject jobj;
