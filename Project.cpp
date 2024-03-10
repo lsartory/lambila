@@ -1,6 +1,7 @@
 #include "Project.h"
 
 #include <QApplication>
+#include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -46,6 +47,7 @@ bool Project::open(const QString &filePath)
     // Set the new project file
     delete _projectFile;
     _projectFile = new QFileInfo(filePath);
+    const QDir targetDir(_projectFile->canonicalPath());
 
     // Open the file and parse it
     QFile file(_projectFile->canonicalFilePath());
@@ -67,7 +69,7 @@ bool Project::open(const QString &filePath)
     if (jobj["_lilaVersion"].toString() != _lilaVersion)
         QMessageBox::warning(QApplication::activeWindow(), tr("Version mismatch"), tr("This file was created by a different Lila version.\n\nCurrent Lila version: %1\nFile version: %2").arg(_lilaVersion).arg(jobj["_lilaVersion"].toString()));
     for (const auto &item : jobj["fileList"].toArray())
-        addFile(item.toString());
+        addFile(targetDir.filePath(item.toString()));
 
     // Mark the project as not modified
     setModified(false);
@@ -81,13 +83,14 @@ bool Project::saveAs(const QString &filePath)
     _projectFile = new QFileInfo(filePath);
     if (_projectFile->suffix().isEmpty())
         _projectFile->setFile(filePath + ".lila");
+    const QDir targetDir(_projectFile->canonicalPath());
 
     // Serialize the settings into JSON
     QJsonObject jobj;
     jobj["_lilaVersion"] = _lilaVersion;
     QStringList files;
     for (const QFileInfo &file : _files)
-        files.append(file.canonicalFilePath()); // TODO: relative paths
+        files.append(targetDir.relativeFilePath(file.canonicalFilePath()));
     jobj["fileList"] = QJsonArray::fromStringList(files);
 
     // Save the file
