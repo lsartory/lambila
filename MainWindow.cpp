@@ -10,6 +10,8 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainWindow)
 {
+    _project = nullptr;
+
     _ui->setupUi(this);
 
     // Restore the window sizes
@@ -27,8 +29,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainW
     _ui->fileTreeWidget->sortByColumn(0, Qt::SortOrder::AscendingOrder);
     // TODO: sort folders first?
 
-    _project = nullptr;
-    projectNew();
+    // Open a file if requested from the command line
+    const QStringList args = QCoreApplication::arguments();
+    if (args.count() > 1)
+        projectOpen(args.at(1));
+    else
+        projectNew();
 }
 
 MainWindow::~MainWindow()
@@ -70,11 +76,12 @@ void MainWindow::projectNew()
     setWindowTitle(tr("Lila"));
 }
 
-void MainWindow::projectOpen()
+void MainWindow::projectOpen(QString filePath)
 {
     if (!projectPromptSave())
         return;
-    const QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
+    if (filePath.isEmpty())
+        filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
     if (filePath.isEmpty())
         return;
     projectNew();
@@ -99,7 +106,7 @@ bool MainWindow::projectSaveAs()
 
 bool MainWindow::projectPromptSave()
 {
-    if (!_project->modified())
+    if (!_project || !_project->modified())
         return true;
     const auto ret = QMessageBox::question(this,
                                            tr("Save current file?"),

@@ -47,12 +47,8 @@ void Project::setModified(bool modified)
 
 bool Project::open(const QString &filePath)
 {
-    // Set the new project file
-    _projectFile.setFile(filePath);
-    const QDir targetDir(_projectFile.canonicalPath());
-
     // Open the file and parse it
-    QFile file(_projectFile.canonicalFilePath());
+    QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QMessageBox::critical(QApplication::activeWindow(), tr("Open failed"), tr("Failed to open file: %1").arg(file.errorString()));
@@ -66,6 +62,10 @@ bool Project::open(const QString &filePath)
         return false;
     }
     const QJsonObject jobj = jdoc.object();
+
+    // Set the project file since it appears to be valid
+    _projectFile.setFile(filePath);
+    const QDir targetDir(_projectFile.absolutePath());
 
     // Load data
     if (jobj["_lilaVersion"].toString() != _lilaVersion)

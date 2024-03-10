@@ -23,7 +23,7 @@ public:
 
 protected:
     void projectNew();
-    void projectOpen();
+    void projectOpen(QString filePath = QString());
     bool projectSaveAs();
     bool projectPromptSave();
 
