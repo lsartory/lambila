@@ -216,8 +216,11 @@ void MainWindow::on_fileAddButton_clicked()
 
 void MainWindow::on_fileRemoveButton_clicked()
 {
+    QStringList fileList;
     for (const auto item : _ui->fileTreeWidget->selectedItems())
-        _project->removeFile(item->data(0, Qt::UserRole).toString());
+        fileList.append(item->data(0, Qt::UserRole).toString());
+    for (const auto &file : fileList)
+        _project->removeFile(file);
 }
 
 /******************************************************************************/
