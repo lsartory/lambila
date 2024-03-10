@@ -23,6 +23,7 @@ public:
 
 protected:
     void projectNew();
+    void projectOpen();
     bool projectSaveAs();
     bool projectPromptSave();
 

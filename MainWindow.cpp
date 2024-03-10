@@ -67,6 +67,20 @@ void MainWindow::projectNew()
     _ui->actionSave->setEnabled(false);
     _ui->fileTreeWidget->clear();
     _ui->fileRemoveButton->setEnabled(false);
+    setWindowTitle(tr("Lila"));
+}
+
+void MainWindow::projectOpen()
+{
+    if (!projectPromptSave())
+        return;
+    const QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
+    if (filePath.isEmpty())
+        return;
+    projectNew();
+    _project->open(filePath);
+    setLastPath(filePath);
+    setWindowTitle(tr("%1 - Lila").arg(QFileInfo(filePath).fileName()));
 }
 
 bool MainWindow::projectSaveAs()
@@ -77,6 +91,7 @@ bool MainWindow::projectSaveAs()
     if (!_project->saveAs(filePath))
         return false;
     setLastPath(filePath);
+    setWindowTitle(tr("%1 - Lila").arg(QFileInfo(filePath).fileName()));
     return true;
 }
 
@@ -214,14 +229,7 @@ void MainWindow::on_actionNew_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    if (!projectPromptSave())
-        return;
-    const QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
-    if (filePath.isEmpty())
-        return;
-    projectNew();
-    _project->open(filePath);
-    setLastPath(filePath);
+    projectOpen();
 }
 
 void MainWindow::on_actionSave_triggered()
