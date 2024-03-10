@@ -17,15 +17,18 @@ const QString Project::_lilaVersion = "1.0";
 Project::Project(QObject *parent) : QObject(parent)
 {
     _modified = false;
-    _projectFile = nullptr;
 }
 
 Project::~Project()
 {
-    delete _projectFile;
 }
 
 /******************************************************************************/
+
+QFileInfo Project::projectFile()
+{
+    return _projectFile;
+}
 
 bool Project::modified()
 {
@@ -45,12 +48,11 @@ void Project::setModified(bool modified)
 bool Project::open(const QString &filePath)
 {
     // Set the new project file
-    delete _projectFile;
-    _projectFile = new QFileInfo(filePath);
-    const QDir targetDir(_projectFile->canonicalPath());
+    _projectFile.setFile(filePath);
+    const QDir targetDir(_projectFile.canonicalPath());
 
     // Open the file and parse it
-    QFile file(_projectFile->canonicalFilePath());
+    QFile file(_projectFile.canonicalFilePath());
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QMessageBox::critical(QApplication::activeWindow(), tr("Open failed"), tr("Failed to open file: %1").arg(file.errorString()));
@@ -79,11 +81,10 @@ bool Project::open(const QString &filePath)
 bool Project::saveAs(const QString &filePath)
 {
     // Set the new project file
-    delete _projectFile;
-    _projectFile = new QFileInfo(filePath);
-    if (_projectFile->suffix().isEmpty())
-        _projectFile->setFile(filePath + ".lila");
-    const QDir targetDir(_projectFile->absolutePath());
+    _projectFile.setFile(filePath);
+    if (_projectFile.suffix().isEmpty())
+        _projectFile.setFile(filePath + ".lila");
+    const QDir targetDir(_projectFile.absolutePath());
 
     // Serialize the settings into JSON
     QJsonObject jobj;
@@ -94,7 +95,7 @@ bool Project::saveAs(const QString &filePath)
     jobj["fileList"] = QJsonArray::fromStringList(files);
 
     // Save the file
-    QSaveFile file(_projectFile->absoluteFilePath());
+    QSaveFile file(_projectFile.absoluteFilePath());
     file.setDirectWriteFallback(true);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
@@ -120,8 +121,8 @@ bool Project::saveAs(const QString &filePath)
 bool Project::save()
 {
     // If a file path is known, reuse it
-    if (_projectFile)
-        return saveAs(_projectFile->canonicalFilePath());
+    if (_projectFile.isWritable())
+        return saveAs(_projectFile.canonicalFilePath());
     return false;
 }
 

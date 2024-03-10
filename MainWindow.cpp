@@ -79,8 +79,9 @@ void MainWindow::projectOpen()
         return;
     projectNew();
     _project->open(filePath);
-    setLastPath(filePath);
-    setWindowTitle(tr("%1 - Lila").arg(QFileInfo(filePath).fileName()));
+    const QFileInfo fi = _project->projectFile();
+    setLastPath(fi.filePath());
+    setWindowTitle(tr("%1 - Lila").arg(fi.fileName()));
 }
 
 bool MainWindow::projectSaveAs()
@@ -90,8 +91,9 @@ bool MainWindow::projectSaveAs()
         return false;
     if (!_project->saveAs(filePath))
         return false;
-    setLastPath(filePath);
-    setWindowTitle(tr("%1 - Lila").arg(QFileInfo(filePath).fileName()));
+    const QFileInfo fi = _project->projectFile();
+    setLastPath(fi.filePath());
+    setWindowTitle(tr("%1 - Lila").arg(fi.fileName()));
     return true;
 }
 

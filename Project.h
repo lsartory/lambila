@@ -9,8 +9,8 @@ class Project : public QObject
 
 private:
     static const QString _lilaVersion;
+    QFileInfo _projectFile;
     bool _modified;
-    QFileInfo *_projectFile;
     QList<QFileInfo> _files;
 
 public:
@@ -21,6 +21,7 @@ protected:
     void setModified(bool);
 
 public:
+    QFileInfo projectFile();
     bool modified();
 
     bool open(const QString &filePath);
