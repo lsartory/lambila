@@ -4,7 +4,9 @@
         <file>resources/icons/document-open.svg</file>
         <file>resources/icons/document-save-as.svg</file>
         <file>resources/icons/document-save.svg</file>
+        <file>resources/icons/folder.svg</file>
         <file>resources/icons/list-add.svg</file>
         <file>resources/icons/list-remove.svg</file>
+        <file>resources/icons/text-x-generic.svg</file>
     </qresource>
 </RCC>

@@ -66,7 +66,7 @@ bool Project::open(const QString &filePath)
     // Load data
     if (jobj["_lilaVersion"].toString() != _lilaVersion)
         QMessageBox::warning(QApplication::activeWindow(), tr("Version mismatch"), tr("This file was created by a different Lila version.\n\nCurrent Lila version: %1\nFile version: %2").arg(_lilaVersion).arg(jobj["_lilaVersion"].toString()));
-    for (const auto item : jobj["fileList"].toArray())
+    for (const auto &item : jobj["fileList"].toArray())
         addFile(item.toString());
 
     // Mark the project as not modified
@@ -86,7 +86,7 @@ bool Project::saveAs(const QString &filePath)
     QJsonObject jobj;
     jobj["_lilaVersion"] = _lilaVersion;
     QStringList files;
-    for (const auto file : _files)
+    for (const QFileInfo &file : _files)
         files.append(file.canonicalFilePath()); // TODO: relative paths
     jobj["fileList"] = QJsonArray::fromStringList(files);
 
@@ -127,7 +127,7 @@ bool Project::save()
 bool Project::addFile(const QString &filePath)
 {
     // Ensure the file does not exist in the list already
-    for (const auto f : _files)
+    for (const QFileInfo &f : _files)
         if (f.canonicalFilePath() == filePath)
             return false;
 

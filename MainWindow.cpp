@@ -23,6 +23,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainW
     _ui->horizontalSplitter->setStretchFactor(1, 4);
     _ui->horizontalSplitter->restoreState(settings.value("UI/horizontalSplitter").toByteArray());
 
+    // Sort the file names aphabetically
+    _ui->fileTreeWidget->sortByColumn(0, Qt::SortOrder::AscendingOrder);
+    // TODO: sort folders first?
+
     _project = nullptr;
     projectNew();
 }
@@ -80,7 +84,14 @@ bool MainWindow::projectPromptSave()
 {
     if (!_project->modified())
         return true;
-    if (QMessageBox::question(this, tr("Save current file?"), tr("The current file was modified, do you want to save it before proceeding?")) == QMessageBox::StandardButton::Yes)
+    const auto ret = QMessageBox::question(this,
+                                           tr("Save current file?"),
+                                           tr("The current file was modified, do you want to save it before proceeding?"),
+                                           QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No | QMessageBox::StandardButton::Cancel),
+                                           QMessageBox::StandardButton::Cancel);
+    if (ret == QMessageBox::StandardButton::Cancel)
+        return false;
+    if (ret == QMessageBox::StandardButton::Yes)
         if (!_project->save())
             return projectSaveAs();
     return true;
@@ -93,26 +104,78 @@ void MainWindow::projectModifiedChanged(bool modified)
     _ui->actionSave->setEnabled(modified);
 }
 
-void MainWindow::projectFileAdded(QFileInfo fi)
+/******************************************************************************/
+
+static QTreeWidgetItem *findTreeNode(QTreeWidget *tree, const QString &path)
 {
-    // Create a new entry in the file list
+    // Iterate over all tree items until a match is found
+    for (QTreeWidgetItemIterator it(tree); *it; ++it)
+        if ((*it)->data(0, Qt::UserRole).toString() == path)
+            return *it;
+    return nullptr;
+}
+
+static QTreeWidgetItem *createTreeNode(QTreeWidget *tree, const QString &path)
+{
+    // Create a new node
+    const QFileInfo fi(path);
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(0, fi.fileName());
-    item->setData(0, Qt::UserRole, fi.canonicalFilePath());
-    _ui->fileTreeWidget->addTopLevelItem(item);
-    _ui->fileTreeWidget->sortByColumn(0, Qt::SortOrder::AscendingOrder);
+    item->setData(0, Qt::UserRole, path);
+    if (fi.isFile())
+        item->setIcon(0, QIcon(":/resources/icons/text-x-generic.svg"));
+    else if (fi.isDir())
+        item->setIcon(0, QIcon(":/resources/icons/folder.svg"));
+    return item;
+}
+
+static QTreeWidgetItem *findOrCreateTreeNode(QTreeWidget *tree, const QString &path)
+{
+    // Check if a node already exists
+    QTreeWidgetItem *item = findTreeNode(tree, path);
+    if (item)
+        return item;
+    return createTreeNode(tree, path);
+}
+
+void MainWindow::projectFileAdded(QFileInfo fi)
+{
+    // Recursively create nodes
+    QTreeWidgetItem *newItem = createTreeNode(_ui->fileTreeWidget, fi.canonicalFilePath());
+    QTreeWidgetItem *item = newItem;
+    for (fi = QFileInfo(fi.canonicalPath()); !fi.isRoot(); fi = QFileInfo(fi.canonicalPath()))
+    {
+        QTreeWidgetItem *parent = findOrCreateTreeNode(_ui->fileTreeWidget, fi.canonicalFilePath());
+        parent->addChild(item);
+        item = parent;
+    }
+    _ui->fileTreeWidget->invisibleRootItem()->addChild(item);
+
+    // Expand parent folders (has to be done separately)
+    for (item = newItem; item; item = item->parent())
+        item->setExpanded(true);
 }
 
 void MainWindow::projectFileRemoved(QFileInfo fi)
 {
-    // Find the file in the list and remove it
-    for (const auto item : _ui->fileTreeWidget->findItems("", Qt::MatchStartsWith))
+    // Find the file in the list
+    QTreeWidgetItem *item = findTreeNode(_ui->fileTreeWidget, fi.canonicalFilePath());
+    if (item)
     {
-        if (item->data(0, Qt::UserRole).toString() == fi.canonicalFilePath())
+        // Remove the file
+        QTreeWidgetItem *parent = item->parent();
+        if (parent)
+            parent->removeChild(item);
+        delete item;
+
+        // Remove the parent folders if they are empty
+        while (parent && parent->childCount() == 0)
         {
-            _ui->fileTreeWidget->invisibleRootItem()->removeChild(item);
-            delete item;
-            break;
+           item = parent;
+           parent = item->parent();
+           if (parent)
+               parent->removeChild(item);
+           delete item;
         }
     }
 }
@@ -127,7 +190,7 @@ void MainWindow::on_fileTreeWidget_itemSelectionChanged()
 void MainWindow::on_fileAddButton_clicked()
 {
     const QStringList filePaths = QFileDialog::getOpenFileNames(this, tr("Select file(s) to add"), lastPath(), tr("VHDL files (*.vhd *.vhdl);;Verilog files (*.v)"));
-    for (const QString filePath : filePaths)
+    for (const QString &filePath : filePaths)
     {
         _project->addFile(filePath);
         setLastPath(filePath);
@@ -136,7 +199,7 @@ void MainWindow::on_fileAddButton_clicked()
 
 void MainWindow::on_fileRemoveButton_clicked()
 {
-    for (auto item : _ui->fileTreeWidget->selectedItems())
+    for (const auto item : _ui->fileTreeWidget->selectedItems())
         _project->removeFile(item->data(0, Qt::UserRole).toString());
 }
 
