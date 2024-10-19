@@ -8,7 +8,7 @@ class Project : public QObject
     Q_OBJECT
 
 private:
-    static const QString _lilaVersion;
+    static const QString _lambilaVersion;
     QFileInfo _projectFile;
     bool _modified;
     QList<QFileInfo> _files;

@@ -6,8 +6,8 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setOrganizationName("lila");
-    QCoreApplication::setApplicationName("lila");
+    QCoreApplication::setOrganizationName("lambila");
+    QCoreApplication::setApplicationName("lambila");
     QApplication::setStyle("Fusion");
     QApplication a(argc, argv);
     MainWindow w;

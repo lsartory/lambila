@@ -10,7 +10,7 @@
 
 /******************************************************************************/
 
-const QString Project::_lilaVersion = "1.0";
+const QString Project::_lambilaVersion = "1.0";
 
 /******************************************************************************/
 
@@ -68,8 +68,8 @@ bool Project::open(const QString &filePath)
     const QDir targetDir(_projectFile.absolutePath());
 
     // Load data
-    if (jobj["_lilaVersion"].toString() != _lilaVersion)
-        QMessageBox::warning(QApplication::activeWindow(), tr("Version mismatch"), tr("This file was created by a different Lila version.\n\nCurrent Lila version: %1\nFile version: %2").arg(_lilaVersion).arg(jobj["_lilaVersion"].toString()));
+    if (jobj["_lambilaVersion"].toString() != _lambilaVersion)
+        QMessageBox::warning(QApplication::activeWindow(), tr("Version mismatch"), tr("This file was created by a different Lambila version.\n\nCurrent Lambila version: %1\nFile version: %2").arg(_lambilaVersion).arg(jobj["_lambilaVersion"].toString()));
     for (const auto &item : jobj["fileList"].toArray())
         addFile(targetDir.filePath(item.toString()));
 
@@ -88,7 +88,7 @@ bool Project::saveAs(const QString &filePath)
 
     // Serialize the settings into JSON
     QJsonObject jobj;
-    jobj["_lilaVersion"] = _lilaVersion;
+    jobj["_lambilaVersion"] = _lambilaVersion;
     QStringList files;
     for (const QFileInfo &file : _files)
         files.append(targetDir.relativeFilePath(file.canonicalFilePath()));

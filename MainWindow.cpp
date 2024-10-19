@@ -73,7 +73,7 @@ void MainWindow::projectNew()
     _ui->actionSave->setEnabled(false);
     _ui->fileTreeWidget->clear();
     _ui->fileRemoveButton->setEnabled(false);
-    setWindowTitle(tr("Lila"));
+    setWindowTitle(tr("Lambila"));
 }
 
 void MainWindow::projectOpen(QString filePath)
@@ -81,26 +81,26 @@ void MainWindow::projectOpen(QString filePath)
     if (!projectPromptSave())
         return;
     if (filePath.isEmpty())
-        filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lila project files (*.lila)"));
+        filePath = QFileDialog::getOpenFileName(this, tr("Open file"), lastPath(), tr("Lambila project files (*.lila)"));
     if (filePath.isEmpty())
         return;
     projectNew();
     _project->open(filePath);
     const QFileInfo fi = _project->projectFile();
     setLastPath(fi.filePath());
-    setWindowTitle(tr("%1 - Lila").arg(fi.fileName()));
+    setWindowTitle(tr("%1 - Lambila").arg(fi.fileName()));
 }
 
 bool MainWindow::projectSaveAs()
 {
-    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"), lastPath(), tr("Lila project files (*.lila)"));
+    const QString filePath = QFileDialog::getSaveFileName(this, tr("Save file"), lastPath(), tr("Lambila project files (*.lila)"));
     if (filePath.isEmpty())
         return false;
     if (!_project->saveAs(filePath))
         return false;
     const QFileInfo fi = _project->projectFile();
     setLastPath(fi.filePath());
-    setWindowTitle(tr("%1 - Lila").arg(fi.fileName()));
+    setWindowTitle(tr("%1 - Lambila").arg(fi.fileName()));
     return true;
 }
 

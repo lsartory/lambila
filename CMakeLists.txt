@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(lila VERSION 0.1 LANGUAGES CXX)
+project(lambila VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -24,20 +24,20 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(lila
+    qt_add_executable(lambila
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         resources.qrc
 
     )
 else()
-    add_executable(lila
+    add_executable(lambila
         ${PROJECT_SOURCES}
     )
 endif()
 
-target_link_libraries(lila PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(lambila PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(lila)
+    qt_finalize_executable(lambila)
 endif()
