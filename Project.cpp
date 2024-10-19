@@ -1,4 +1,5 @@
 #include "Project.h"
+#include "VhdlParser.h"
 
 #include <QApplication>
 #include <QDir>
@@ -160,4 +161,16 @@ bool Project::removeFile(const QString &filePath)
         }
     }
     return false;
+}
+
+/******************************************************************************/
+
+bool Project::refresh()
+{
+   for (auto file : _files)
+   {
+       VhdlParser(file).parse();
+       break; // TODO: actual loop
+   }
+   return true;
 }

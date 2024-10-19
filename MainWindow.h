@@ -39,6 +39,8 @@ private slots:
     void on_fileAddButton_clicked();
     void on_fileRemoveButton_clicked();
 
+    void on_refreshButton_clicked();
+
     void on_actionNew_triggered();
     void on_actionOpen_triggered();
     void on_actionSave_triggered();

@@ -31,6 +31,8 @@ public:
     bool addFile(const QString &filePath);
     bool removeFile(const QString &filePath);
 
+    bool refresh();
+
 signals:
     void modifiedChanged(bool modified);
     void fileAdded(QFileInfo fi);

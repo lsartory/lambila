@@ -21,6 +21,8 @@ set(PROJECT_SOURCES
         MainWindow.ui
         Project.cpp
         Project.h
+        VhdlParser.cpp
+        VhdlParser.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

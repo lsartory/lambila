@@ -60,6 +60,17 @@
          <item>
           <layout class="QHBoxLayout" name="fileButtonsLayout">
            <item>
+            <widget class="QPushButton" name="refreshButton">
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+             <property name="icon">
+              <iconset theme="list-add" resource="resources.qrc">
+               <normaloff>:/resources/icons/list-add.svg</normaloff>:/resources/icons/list-add.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="fileAddButton">
              <property name="text">
               <string>Add file</string>

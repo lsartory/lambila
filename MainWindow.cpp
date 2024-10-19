@@ -230,6 +230,13 @@ void MainWindow::on_fileRemoveButton_clicked()
         _project->removeFile(file);
 }
 
+void MainWindow::on_refreshButton_clicked()
+{
+    if (!_project)
+        return;
+    _project->refresh();
+}
+
 /******************************************************************************/
 
 void MainWindow::on_actionNew_triggered()
