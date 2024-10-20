@@ -1,7 +1,7 @@
+#include "Logger.h"
 #include "VhdlParser.h"
 
 #include <QApplication>
-#include <QMessageBox>
 #include <QRegularExpression>
 #include <QStack>
 
@@ -71,7 +71,6 @@ public:
 
 /******************************************************************************/
 
-#include <QDebug> // TODO: implement proper logging
 bool VhdlParser::parse()
 {
     QStack<State> state;
@@ -81,12 +80,14 @@ bool VhdlParser::parse()
 
     // Open the source file
     const QString filePath = _sourceFile.canonicalFilePath();
+    Logger::info(tr("Parsing %1").arg(filePath));
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qDebug() << tr("Failed to open file: %1").arg(file.errorString());
+        Logger::error(tr("Failed to open file: %1").arg(file.errorString()));
         return false;
     }
+
     // Parse the file
     unsigned int lineNumber = 0;
     while (!file.atEnd())
@@ -102,7 +103,7 @@ bool VhdlParser::parse()
             if (token.isCommentStart())
                 break;
 
-            qDebug() << tr("state = 0x%1; token = %2").arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')).arg(token); // TODO: debug only
+            Logger::debug(tr("state = 0x%1; token = %2").arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')).arg(token)); // TODO: debug only
 
             // Check token depending on the current state
             switch (state.top()) {
@@ -215,20 +216,20 @@ bool VhdlParser::parse()
                 break;
 
             default:
-                qDebug() << tr("%1:%2 Unexpected state (0x%3)").arg(filePath).arg(lineNumber).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0'));
+                Logger::error(tr("%1:%2 Unexpected state (0x%3)").arg(filePath).arg(lineNumber).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
                 return false;
             }
             continue;
 
 unexpected:
-            qDebug() << tr("%1:%2 “%3” unexpected (state = 0x%4)").arg(filePath).arg(lineNumber).arg(token).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0'));
+            Logger::error(tr("%1:%2 “%3” unexpected (state = 0x%4)").arg(filePath).arg(lineNumber).arg(token).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
             return false;
         }
     }
 
     if (state.top() != State::Base)
     {
-        qDebug() << tr("%1 Unexpected end of file (state = 0x%2)").arg(filePath).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0'));
+        Logger::error(tr("%1 Unexpected end of file (state = 0x%2)").arg(filePath).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
         return false;
     }
 

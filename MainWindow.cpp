@@ -14,6 +14,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainW
 
     _ui->setupUi(this);
 
+    // Connect to the logger
+    connect(Logger::instance(), &Logger::logReceived, this, &MainWindow::logReceived);
+    Logger::info(tr("Lambila - v%1 started").arg(Project::version()));
+
     // Restore the window sizes
     QSettings settings;
     restoreGeometry(settings.value("UI/geometry").toByteArray());
@@ -271,6 +275,22 @@ void MainWindow::on_actionSaveAs_triggered()
 void MainWindow::on_actionExit_triggered()
 {
     close();
+}
+
+/******************************************************************************/
+
+void MainWindow::logReceived(Logger::LogLevel logLevel, const QString &message)
+{
+    QString format;
+    switch (logLevel)
+    {
+    case Logger::LogLevel::Error:   format = "<span style='color:#800000'>%1</span>"; break;
+    case Logger::LogLevel::Warning: format = "<span style='color:#FF8000'>%1</span>"; break;
+    case Logger::LogLevel::Debug:   format = "<span style='color:#008000'>%1</span>"; break;
+    default: format = "%1";
+    }
+
+    _ui->logTextEdit->append(QString(format).arg(message));
 }
 
 /******************************************************************************/

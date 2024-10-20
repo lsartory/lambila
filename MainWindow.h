@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Logger.h"
 #include "Project.h"
 
 #include <QMainWindow>
@@ -46,5 +47,7 @@ private slots:
     void on_actionSave_triggered();
     void on_actionSaveAs_triggered();
     void on_actionExit_triggered();
+
+    void logReceived(Logger::LogLevel logLevel, const QString &message);
 };
 #endif // MAINWINDOW_H

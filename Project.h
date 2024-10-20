@@ -15,7 +15,8 @@ private:
 
 public:
     Project(QObject *parent = nullptr);
-    ~Project();
+
+    static QString version();
 
 protected:
     void setModified(bool);

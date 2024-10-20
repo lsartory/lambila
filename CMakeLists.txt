@@ -15,7 +15,8 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
-        main.cpp
+        Logger.cpp
+        Logger.h
         MainWindow.cpp
         MainWindow.h
         MainWindow.ui
@@ -23,6 +24,7 @@ set(PROJECT_SOURCES
         Project.h
         VhdlParser.cpp
         VhdlParser.h
+        main.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

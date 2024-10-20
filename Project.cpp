@@ -1,3 +1,4 @@
+#include "Logger.h"
 #include "Project.h"
 #include "VhdlParser.h"
 
@@ -6,7 +7,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
-#include <QMessageBox>
 #include <QSaveFile>
 
 /******************************************************************************/
@@ -20,8 +20,9 @@ Project::Project(QObject *parent) : QObject(parent)
     _modified = false;
 }
 
-Project::~Project()
+QString Project::version()
 {
+    return _lambilaVersion;
 }
 
 /******************************************************************************/
@@ -50,16 +51,17 @@ bool Project::open(const QString &filePath)
 {
     // Open the file and parse it
     QFile file(filePath);
+    Logger::info(tr("Opening project %1").arg(filePath));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Open failed"), tr("Failed to open file: %1").arg(file.errorString()));
+        Logger::error(tr("Failed to open file: %1").arg(file.errorString()));
         return false;
     }
     QJsonParseError e;
     const QJsonDocument jdoc = QJsonDocument::fromJson(file.readAll(), &e);
     if (e.error != QJsonParseError::ParseError::NoError)
     {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Open failed"), tr("Failed to parse file: %1").arg(e.errorString()));
+        Logger::error(tr("Failed to parse file: %1").arg(e.errorString()));
         return false;
     }
     const QJsonObject jobj = jdoc.object();
@@ -70,7 +72,7 @@ bool Project::open(const QString &filePath)
 
     // Load data
     if (jobj["_lambilaVersion"].toString() != _lambilaVersion)
-        QMessageBox::warning(QApplication::activeWindow(), tr("Version mismatch"), tr("This file was created by a different Lambila version.\n\nCurrent Lambila version: %1\nFile version: %2").arg(_lambilaVersion).arg(jobj["_lambilaVersion"].toString()));
+        Logger::warning(tr("This file was created by a different Lambila version. Current version: %1, file version: %2").arg(_lambilaVersion).arg(jobj["_lambilaVersion"].toString()));
     for (const auto &item : jobj["fileList"].toArray())
         addFile(targetDir.filePath(item.toString()));
 
@@ -100,17 +102,17 @@ bool Project::saveAs(const QString &filePath)
     file.setDirectWriteFallback(true);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Save failed"), tr("Failed to open file: %1").arg(file.errorString()));
+        Logger::error(tr("Save failed - Open file: %1").arg(file.errorString()));
         return false;
     }
     if (file.write(QJsonDocument(jobj).toJson()) == -1)
     {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Save failed"), tr("Failed to write file: %1").arg(file.errorString()));
+        Logger::error(tr("Save failed - Write: %1").arg(file.errorString()));
         return false;
     }
     if (!file.commit())
     {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Save failed"), tr("Failed to save file: %1").arg(file.errorString()));
+        Logger::error(tr("Save failed - Commit: %1").arg(file.errorString()));
         return false;
     }
 
