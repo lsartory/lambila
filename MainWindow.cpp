@@ -178,6 +178,9 @@ void MainWindow::projectFileAdded(QFileInfo fi)
     // Expand parent folders (has to be done separately)
     for (item = newItem; item; item = item->parent())
         item->setExpanded(true);
+
+    // Enable the refresh button
+    _ui->refreshButton->setEnabled(true);
 }
 
 void MainWindow::projectFileRemoved(QFileInfo fi)
@@ -202,6 +205,9 @@ void MainWindow::projectFileRemoved(QFileInfo fi)
            delete item;
         }
     }
+
+    // Disable the refresh button if nothing is left
+    _ui->refreshButton->setEnabled(_ui->fileTreeWidget->topLevelItemCount() != 0);
 }
 
 /******************************************************************************/

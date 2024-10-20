@@ -18,11 +18,11 @@
     <item>
      <widget class="QSplitter" name="horizontalSplitter">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <widget class="QSplitter" name="verticalSplitter">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <widget class="QWidget" name="verticalLayoutWidget">
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -42,7 +42,7 @@
             <bool>true</bool>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
+            <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
            </property>
            <property name="sortingEnabled">
             <bool>true</bool>
@@ -60,20 +60,9 @@
          <item>
           <layout class="QHBoxLayout" name="fileButtonsLayout">
            <item>
-            <widget class="QPushButton" name="refreshButton">
-             <property name="text">
-              <string>Refresh</string>
-             </property>
-             <property name="icon">
-              <iconset theme="list-add" resource="resources.qrc">
-               <normaloff>:/resources/icons/list-add.svg</normaloff>:/resources/icons/list-add.svg</iconset>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QPushButton" name="fileAddButton">
              <property name="text">
-              <string>Add file</string>
+              <string>&amp;Add file</string>
              </property>
              <property name="icon">
               <iconset theme="list-add" resource="resources.qrc">
@@ -87,7 +76,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Remove file</string>
+              <string>&amp;Remove file</string>
              </property>
              <property name="icon">
               <iconset theme="list-remove" resource="resources.qrc">
@@ -118,6 +107,20 @@
              <string notr="true">1</string>
             </property>
            </column>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="refreshButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Re&amp;fresh</string>
+           </property>
+           <property name="icon">
+            <iconset theme="list-add" resource="resources.qrc">
+             <normaloff>:/resources/icons/view-refresh.svg</normaloff>:/resources/icons/view-refresh.svg</iconset>
+           </property>
           </widget>
          </item>
         </layout>
@@ -185,7 +188,7 @@
     <string>Ctrl+Q</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::QuitRole</enum>
+    <enum>QAction::MenuRole::QuitRole</enum>
    </property>
   </action>
   <action name="actionNew">

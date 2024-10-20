@@ -8,5 +8,6 @@
         <file>resources/icons/list-add.svg</file>
         <file>resources/icons/list-remove.svg</file>
         <file>resources/icons/text-x-generic.svg</file>
+        <file>resources/icons/view-refresh.svg</file>
     </qresource>
 </RCC>
