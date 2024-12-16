@@ -7,9 +7,14 @@
 
 /******************************************************************************/
 
-VhdlParser::VhdlParser(const QFileInfo &sourceFile, QObject *parent) : QObject(parent)
+static const char WORKSPACE_NAME[] = "work";
+
+/******************************************************************************/
+
+VhdlParser::VhdlParser(const QFileInfo &sourceFile, Design *design, QObject *parent) : QObject(parent)
 {
     _sourceFile = sourceFile;
+    _design = design;
 }
 
 /******************************************************************************/
@@ -23,6 +28,9 @@ enum class VhdlParser::State {
     EntityBody,
     EntityGeneric,
     EntityPort,
+    EntityPortDirection,
+    EntityPortType,
+    EntityPortAssignment,
 
     Architecture = 0x3000,
 
@@ -30,6 +38,7 @@ enum class VhdlParser::State {
     ExpectOpeningParenthesis,
     ExpectClosingParenthesis,
     ExpectSemicolon,
+    ExpectColon,
 
     SkipToClosingParenthesis = 0xB000,
     SkipToSemicolon
@@ -58,6 +67,11 @@ public:
         return contains(QRegularExpression(QString("^%1$").arg(re)));
     }
 
+    bool isIdentifier() const
+    {
+        return matches("\\w+");
+    }
+
     bool isCommentStart() const
     {
         return startsWith("--");
@@ -73,10 +87,13 @@ public:
 
 bool VhdlParser::parse()
 {
+    QString errorString;
     QStack<State> state;
     state.push(State::Base);
 
-    QString currentEntity;
+    Entity *currentEntity = new Entity;
+    QString signal;
+    QString direction;
 
     // Open the source file
     const QString filePath = _sourceFile.canonicalFilePath();
@@ -133,17 +150,20 @@ bool VhdlParser::parse()
                 // We accept pretty much anything for now
                 if (token.matches("\\w+\\..*"))
                 {
-                    _uses.insert(token.section('.', 0, 0), token.section('.', 1));
+                    currentEntity->addUse(token.section('.', 0, 0), token.section('.', 1));
                     state.top() = State::ExpectSemicolon;
                 }
                 else
                     goto unexpected;
                 break;
 
+            /******************************************************************************/
+
             case State::Entity:
                 if (token.matches("\\w+"))
                 {
-                    currentEntity = token;
+                    currentEntity->setName(QString("%1.%2").arg(WORKSPACE_NAME).arg(token));
+                    _design->addEntity(currentEntity);
                     state.top() = State::EntityBody;
                     state.push(State::ExpectIs);
                 }
@@ -158,6 +178,7 @@ bool VhdlParser::parse()
                 }
                 else if (token.is("port"))
                 {
+                    state.push(State::ExpectSemicolon);
                     state.push(State::EntityPort);
                     state.push(State::ExpectOpeningParenthesis);
                 }
@@ -167,17 +188,68 @@ bool VhdlParser::parse()
                     goto unexpected;
                 break;
             case State::EntityGeneric:
-                // Skip generic definitions
+                // Skip generic definitions for now
                 state.top() = State::ExpectSemicolon;
                 if (!token.is(')'))
                     state.push(State::SkipToClosingParenthesis);
                 break;
             case State::EntityPort:
-                // TODO: save signals
-                state.top() = State::ExpectSemicolon;
-                if (!token.is(')'))
-                    state.push(State::SkipToClosingParenthesis);
+                if (token.isIdentifier())
+                {
+                    signal = token;
+                    state.push(State::EntityPortDirection);
+                    state.push(State::ExpectColon);
+                }
+                else if (token.is(')'))
+                    state.top() = State::ExpectSemicolon;
+                else
+                    goto unexpected;
                 break;
+            case State::EntityPortDirection:
+                if (token.isIdentifier())
+                {
+                    direction = token;
+                    state.top() = State::EntityPortType;
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::EntityPortType:
+                if (token.isIdentifier())
+                {
+                    currentEntity->addPort(signal, direction, token);
+                    state.top() = State::EntityPortAssignment;
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::EntityPortAssignment:
+                if (token.is(';'))
+                    state.pop();
+                else if (token.is(')'))
+                {
+                    state.pop();
+                    state.pop();
+                }
+                else if (token.is(":"))
+                {
+                    // TODO: assignments in ports
+                    errorString = "“:=” assignments in ports are not implemented yet";
+                    goto error;
+                }
+                else
+                    goto unexpected;
+                break;
+
+            /******************************************************************************/
+
+            case State::Architecture:
+                // TODO: architecture parsing
+                errorString = "Architecture parsing is not implemented yet";
+                goto error;
+                break;
+
+            /******************************************************************************/
 
             case State::ExpectIs:
                 if (token.is("is"))
@@ -203,6 +275,14 @@ bool VhdlParser::parse()
                 else
                     goto unexpected;
                 break;
+            case State::ExpectColon:
+                if (token.is(':'))
+                    state.pop();
+                else
+                    goto unexpected;
+                break;
+
+            /******************************************************************************/
 
             case State::SkipToClosingParenthesis:
                 if (token.is(')'))
@@ -215,6 +295,8 @@ bool VhdlParser::parse()
                     state.pop();
                 break;
 
+            /******************************************************************************/
+
             default:
                 Logger::error(tr("%1:%2 Unexpected state (0x%3)").arg(filePath).arg(lineNumber).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
                 return false;
@@ -223,6 +305,9 @@ bool VhdlParser::parse()
 
 unexpected:
             Logger::error(tr("%1:%2 “%3” unexpected (state = 0x%4)").arg(filePath).arg(lineNumber).arg(token).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
+            return false;
+error:
+            Logger::error(tr("%1:%2 %3").arg(filePath).arg(lineNumber).arg(errorString));
             return false;
         }
     }

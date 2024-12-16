@@ -1,8 +1,9 @@
 #ifndef VHDLPARSER_H
 #define VHDLPARSER_H
 
+#include "Design.h"
+
 #include <QFileInfo>
-#include <QMultiHash>
 
 class VhdlParser : public QObject
 {
@@ -13,10 +14,10 @@ protected:
     class Token;
 
     QFileInfo _sourceFile;
-    QMultiHash<QString, QString> _uses;
+    Design *_design;
 
 public:
-    VhdlParser(const QFileInfo &sourceFile, QObject *parent = nullptr);
+    VhdlParser(const QFileInfo &sourceFile, Design *design, QObject *parent = nullptr);
 
     bool parse();
 };

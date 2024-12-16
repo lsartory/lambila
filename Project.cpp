@@ -18,6 +18,12 @@ const QString Project::_lambilaVersion = "1.0";
 Project::Project(QObject *parent) : QObject(parent)
 {
     _modified = false;
+    _design = nullptr;
+}
+
+Project::~Project()
+{
+    delete _design;
 }
 
 QString Project::version()
@@ -169,10 +175,19 @@ bool Project::removeFile(const QString &filePath)
 
 bool Project::refresh()
 {
-   for (auto file : _files)
-   {
-       VhdlParser(file).parse();
-       break; // TODO: actual loop
-   }
-   return true;
+    delete _design;
+    _design = new Design;
+
+    for (auto file : _files)
+    {
+        VhdlParser(file, _design).parse();
+        break; // TODO: actual loop
+    }
+
+    // TODO: build hierarchy
+    for (auto entity : _design->entities())
+    {
+        Logger::info(entity->name());
+    }
+    return true;
 }
