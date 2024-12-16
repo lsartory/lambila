@@ -1,5 +1,5 @@
 #include "MainWindow.h"
-#include "./ui_MainWindow.h"
+#include "../ui/ui_MainWindow.h"
 
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -151,9 +151,9 @@ static QTreeWidgetItem *createTreeNode(QTreeWidget *tree, const QString &path)
     item->setText(0, fi.fileName());
     item->setData(0, Qt::UserRole, path);
     if (fi.isFile())
-        item->setIcon(0, QIcon(":/resources/icons/text-x-generic.svg"));
+        item->setIcon(0, QIcon(":/icons/text-x-generic.svg"));
     else if (fi.isDir())
-        item->setIcon(0, QIcon(":/resources/icons/folder.svg"));
+        item->setIcon(0, QIcon(":/icons/folder.svg"));
     return item;
 }
 

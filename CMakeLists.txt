@@ -15,24 +15,24 @@ find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
-        Design.h
-        Logger.cpp
-        Logger.h
-        MainWindow.cpp
-        MainWindow.h
-        MainWindow.ui
-        Project.cpp
-        Project.h
-        VhdlParser.cpp
-        VhdlParser.h
-        main.cpp
+        src/Design.h
+        src/Logger.cpp
+        src/Logger.h
+        src/MainWindow.cpp
+        src/MainWindow.h
+        src/Project.cpp
+        src/Project.h
+        src/VhdlParser.cpp
+        src/VhdlParser.h
+        src/main.cpp
+        ui/MainWindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(lambila
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        resources.qrc
+        resources/resources.qrc
     )
 else()
     add_executable(lambila

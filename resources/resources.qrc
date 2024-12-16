@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/document-new.svg</file>
+        <file>icons/document-open.svg</file>
+        <file>icons/document-save-as.svg</file>
+        <file>icons/document-save.svg</file>
+        <file>icons/folder.svg</file>
+        <file>icons/list-add.svg</file>
+        <file>icons/list-remove.svg</file>
+        <file>icons/text-x-generic.svg</file>
+        <file>icons/view-refresh.svg</file>
+    </qresource>
+</RCC>
