@@ -304,8 +304,7 @@ bool VhdlParser::parse()
             continue;
 
 unexpected:
-            Logger::error(tr("%1:%2 “%3” unexpected (state = 0x%4)").arg(filePath).arg(lineNumber).arg(token).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')));
-            return false;
+            errorString = QString("“%1” unexpected (state = 0x%2)").arg(token).arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0'));
 error:
             Logger::error(tr("%1:%2 %3").arg(filePath).arg(lineNumber).arg(errorString));
             return false;
