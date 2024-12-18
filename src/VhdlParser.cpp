@@ -91,9 +91,12 @@ bool VhdlParser::parse()
     QStack<State> state;
     state.push(State::Base);
 
-    Entity *currentEntity = new Entity;
+    Entity dummyEntity;
+    Entity *currentEntity = &dummyEntity;
     QString signal;
     QString direction;
+    QString type;
+    int parenCount = 0;
 
     // Open the source file
     const QString filePath = _sourceFile.canonicalFilePath();
@@ -140,6 +143,7 @@ bool VhdlParser::parse()
 
             case State::Library:
                 // We probably don't really need to track libraries
+                currentEntity = &dummyEntity;
                 if (!token.is(';'))
                     state.top() = State::SkipToSemicolon;
                 else
@@ -162,8 +166,14 @@ bool VhdlParser::parse()
             case State::Entity:
                 if (token.matches("\\w+"))
                 {
+                    // Create a copy of the current entity and add it to the list
+                    Entity *newEntity = new Entity;
+                    *newEntity = *currentEntity;
+                    currentEntity = newEntity;
                     currentEntity->setName(QString("%1.%2").arg(WORKSPACE_NAME).arg(token));
                     _design->addEntity(currentEntity);
+                    dummyEntity.reset();
+
                     state.top() = State::EntityBody;
                     state.push(State::ExpectIs);
                 }
@@ -197,11 +207,11 @@ bool VhdlParser::parse()
                 if (token.isIdentifier())
                 {
                     signal = token;
+                    direction = "";
+                    type = "";
                     state.push(State::EntityPortDirection);
                     state.push(State::ExpectColon);
                 }
-                else if (token.is(')'))
-                    state.top() = State::ExpectSemicolon;
                 else
                     goto unexpected;
                 break;
@@ -209,36 +219,65 @@ bool VhdlParser::parse()
                 if (token.isIdentifier())
                 {
                     direction = token;
+                    parenCount = 0;
                     state.top() = State::EntityPortType;
                 }
                 else
                     goto unexpected;
                 break;
             case State::EntityPortType:
-                if (token.isIdentifier())
+                if (token.is(':'))
                 {
-                    currentEntity->addPort(signal, direction, token);
+                    currentEntity->addPort(signal, direction, type.trimmed());
                     state.top() = State::EntityPortAssignment;
                 }
+                else if (token.is(';'))
+                {
+                    currentEntity->addPort(signal, direction, type.trimmed());
+                    state.pop();
+                }
+                else if (token.is(')'))
+                {
+                    if (parenCount != 0)
+                    {
+                        parenCount -= 1;
+                        type += token;
+                    }
+                    else
+                    {
+                        currentEntity->addPort(signal, direction, type.trimmed());
+                        state.pop();
+                        state.pop();
+                    }
+                }
+                else if (token.is('('))
+                {
+                    parenCount += 1;
+                    type += token;
+                }
                 else
-                    goto unexpected;
+                {
+                    if (!type.endsWith('('))
+                        type += ' ';
+                    type += token;
+                }
                 break;
             case State::EntityPortAssignment:
+                // Default assignments are ignored
                 if (token.is(';'))
                     state.pop();
                 else if (token.is(')'))
                 {
-                    state.pop();
-                    state.pop();
+                    if (parenCount != 0)
+                        parenCount -= 1;
+                    else
+                    {
+                        state.pop();
+                        state.pop();
+                    }
                 }
-                else if (token.is(":"))
-                {
-                    // TODO: assignments in ports
-                    errorString = "“:=” assignments in ports are not implemented yet";
-                    goto error;
-                }
-                else
-                    goto unexpected;
+                else if (token.is('('))
+                    parenCount += 1;
                 break;
 
             /******************************************************************************/

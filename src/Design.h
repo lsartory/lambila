@@ -41,8 +41,17 @@ protected:
 public:
     ~Entity()
     {
+        reset();
+    }
+
+    void reset()
+    {
+        _name = "";
+        _uses.clear();
+        _ports.clear();
         for (auto architecture : _architectures)
             delete architecture;
+        _architectures.clear();
     }
 
     const QString &name()
