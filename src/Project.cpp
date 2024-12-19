@@ -179,15 +179,12 @@ bool Project::refresh()
     _design = new Design;
 
     for (auto file : _files)
-    {
-        VhdlParser(file, _design).parse();
-        break; // TODO: actual loop
-    }
+        if (!VhdlParser(file, _design).parse())
+            break;
 
     // TODO: build hierarchy
+    Logger::debug("Found entities:");
     for (auto entity : _design->entities())
-    {
-        Logger::info(entity->name());
-    }
+        Logger::debug(entity->name());
     return true;
 }

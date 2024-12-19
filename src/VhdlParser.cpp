@@ -33,14 +33,24 @@ enum class VhdlParser::State {
     EntityPortAssignment,
 
     Architecture = 0x3000,
+    ArchitectureOf,
+    ArchitectureHeader,
+    ArchitectureSignal,
+    ArchitectureSignalType,
+    ArchitectureSignalAssignment,
 
     ExpectIs = 0xA000,
+    ExpectOf,
+    ExpectBegin,
+    ExpectEnd,
     ExpectOpeningParenthesis,
     ExpectClosingParenthesis,
     ExpectSemicolon,
     ExpectColon,
 
-    SkipToClosingParenthesis = 0xB000,
+    SkipToBegin = 0xB000,
+    SkipToEnd,
+    SkipToClosingParenthesis,
     SkipToSemicolon
 };
 
@@ -90,13 +100,15 @@ bool VhdlParser::parse()
     QString errorString;
     QStack<State> state;
     state.push(State::Base);
+    int parenCount = 0;
 
     Entity dummyEntity;
     Entity *currentEntity = &dummyEntity;
-    QString signal;
+    Architecture *currentArchitecture = nullptr;
+
+    QString name;
     QString direction;
     QString type;
-    int parenCount = 0;
 
     // Open the source file
     const QString filePath = _sourceFile.canonicalFilePath();
@@ -123,7 +135,8 @@ bool VhdlParser::parse()
             if (token.isCommentStart())
                 break;
 
-            Logger::debug(tr("state = 0x%1; token = %2").arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')).arg(token)); // TODO: debug only
+            // Display all tokens and stack length, for debugging
+            Logger::trace(tr("state = 0x%1 | %2; token = %3").arg(static_cast<unsigned int>(state.top()), 4, 16, QChar('0')).arg(state.length()).arg(token));
 
             // Check token depending on the current state
             switch (state.top()) {
@@ -206,7 +219,7 @@ bool VhdlParser::parse()
             case State::EntityPort:
                 if (token.isIdentifier())
                 {
-                    signal = token;
+                    name = token;
                     direction = "";
                     type = "";
                     state.push(State::EntityPortDirection);
@@ -228,12 +241,16 @@ bool VhdlParser::parse()
             case State::EntityPortType:
                 if (token.is(':'))
                 {
-                    currentEntity->addPort(signal, direction, type.trimmed());
+                    if (type.isEmpty())
+                        goto unexpected;
+                    currentEntity->addPort(name, direction, type.trimmed());
                     state.top() = State::EntityPortAssignment;
                 }
                 else if (token.is(';'))
                 {
-                    currentEntity->addPort(signal, direction, type.trimmed());
+                    if (type.isEmpty())
+                        goto unexpected;
+                    currentEntity->addPort(name, direction, type.trimmed());
                     state.pop();
                 }
                 else if (token.is(')'))
@@ -245,7 +262,7 @@ bool VhdlParser::parse()
                     }
                     else
                     {
-                        currentEntity->addPort(signal, direction, type.trimmed());
+                        currentEntity->addPort(name, direction, type.trimmed());
                         state.pop();
                         state.pop();
                     }
@@ -283,15 +300,161 @@ bool VhdlParser::parse()
             /******************************************************************************/
 
             case State::Architecture:
-                // TODO: architecture parsing
-                errorString = "Architecture parsing is not implemented yet";
-                goto error;
+                if (token.isIdentifier())
+                {
+                    name = token;
+                    state.top() = State::ArchitectureOf;
+                    state.push(State::ExpectOf);
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::ArchitectureOf:
+                if (token.isIdentifier())
+                {
+                    currentArchitecture = new Architecture;
+                    currentArchitecture->setName(name);
+                    Entity *entity = _design->entity(QString("%1.%2").arg(WORKSPACE_NAME).arg(token));
+                    if (entity != nullptr)
+                    {
+                        entity->addArchitecture(currentArchitecture);
+                        state.top() = State::ArchitectureHeader;
+                        state.push(State::ExpectIs);
+                    }
+                    else
+                    {
+                        errorString = QString("Unknown entity “%1”").arg(token);
+                        goto error;
+                    }
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::ArchitectureHeader:
+                if (token.is("signal"))
+                    state.push(State::ArchitectureSignal);
+                else if (token.is("constant"))
+                {
+                    // TODO: constant parsing
+                    errorString = "constant parsing is not implemented yet";
+                    goto error;
+                }
+                else if (token.is("type"))
+                {
+                    // TODO: type parsing
+                    errorString = "type parsing is not implemented yet";
+                    goto error;
+                }
+                else if (token.is("function") || token.is("procedure"))
+                {
+                    // Ignore functions
+                    state.push(State::SkipToSemicolon);
+                    state.push(State::SkipToEnd);
+                    state.push(State::SkipToBegin);
+                }
+                else if (token.is("component"))
+                {
+                    // Ignore components
+                    state.push(State::SkipToSemicolon);
+                    state.push(State::SkipToEnd);
+                }
+                else if (token.is("begin"))
+                {
+                    // TODO: architecture body
+                    state.top() = State::SkipToSemicolon;
+                    state.push(State::SkipToEnd);
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::ArchitectureSignal:
+                if (token.isIdentifier())
+                {
+                    name = token;
+                    type = "";
+                    state.top() = State::ArchitectureSignalType;
+                    state.push(State::ExpectColon);
+                }
+                else
+                    goto unexpected;
+                break;
+            case State::ArchitectureSignalType:
+                if (token.is(':'))
+                {
+                    if (type.isEmpty())
+                        goto unexpected;
+                    currentArchitecture->addSignal(name, type.trimmed());
+                    state.top() = State::ArchitectureSignalAssignment;
+                }
+                else if (token.is(';'))
+                {
+                    if (type.isEmpty())
+                        goto unexpected;
+                    currentArchitecture->addSignal(name, type.trimmed());
+                    state.pop();
+                }
+                else if (token.is(')'))
+                {
+                    if (parenCount != 0)
+                    {
+                        parenCount -= 1;
+                        type += token;
+                    }
+                    else
+                        goto unexpected;
+                }
+                else if (token.is('('))
+                {
+                    parenCount += 1;
+                    type += token;
+                }
+                else
+                {
+                    if (!type.endsWith('('))
+                        type += ' ';
+                    type += token;
+                }
+                break;
+            case State::ArchitectureSignalAssignment:
+                // Default assignments are ignored
+                if (token.is(';'))
+                    state.pop();
+                else if (token.is(')'))
+                {
+                    if (parenCount != 0)
+                        parenCount -= 1;
+                    else
+                    {
+                        state.pop();
+                        state.pop();
+                    }
+                }
+                else if (token.is('('))
+                    parenCount += 1;
                 break;
 
             /******************************************************************************/
 
             case State::ExpectIs:
                 if (token.is("is"))
+                    state.pop();
+                else
+                    goto unexpected;
+                break;
+            case State::ExpectOf:
+                if (token.is("of"))
+                    state.pop();
+                else
+                    goto unexpected;
+                break;
+            case State::ExpectBegin:
+                if (token.is("begin"))
+                    state.pop();
+                else
+                    goto unexpected;
+                break;
+            case State::ExpectEnd:
+                if (token.is("end"))
                     state.pop();
                 else
                     goto unexpected;
@@ -323,6 +486,16 @@ bool VhdlParser::parse()
 
             /******************************************************************************/
 
+            case State::SkipToBegin:
+                if (token.is("begin"))
+                    state.pop();
+                break;
+            case State::SkipToEnd:
+                if (token.is("end"))
+                    state.pop();
+                else if (token.is("begin") || token.is("then") || token.is("for"))
+                    state.push(State::SkipToEnd);
+                break;
             case State::SkipToClosingParenthesis:
                 if (token.is(')'))
                     state.pop();

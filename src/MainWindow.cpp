@@ -287,7 +287,8 @@ void MainWindow::logReceived(Logger::LogLevel logLevel, const QString &message)
     case Logger::LogLevel::Error:   format = "<span style='color:#800000'>%1</span>"; break;
     case Logger::LogLevel::Warning: format = "<span style='color:#FF8000'>%1</span>"; break;
     case Logger::LogLevel::Debug:   format = "<span style='color:#008000'>%1</span>"; break;
-    default: format = "%1";
+    case Logger::LogLevel::Trace:   format = "<span style='color:#808080'>%1</span>"; break;
+    default: format = "<span>%1</span>";
     }
 
     _ui->logTextEdit->append(QString(format).arg(message));

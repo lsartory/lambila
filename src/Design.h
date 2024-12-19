@@ -23,6 +23,7 @@ public:
     }
     void addSignal(const QString &name, const QString &type)
     {
+        Logger::debug(QString("%1 add signal: %2 | %3").arg(_name).arg(name).arg(type));
         _signals.insert(name, type);
     }
 };
@@ -91,6 +92,10 @@ public:
             delete entity;
     }
 
+    Entity *entity(QString name)
+    {
+        return _entities.value(name, nullptr);
+    }
     const QHash<QString, Entity *> &entities()
     {
         return _entities;

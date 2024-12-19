@@ -12,10 +12,13 @@ public:
         Error,
         Warning,
         Info,
-        Debug
+        Debug,
+        Trace
     };
 
 private:
+    LogLevel _verbosity;
+
     static Logger *_instance;
     Logger();
 
@@ -24,10 +27,14 @@ private:
 public:
     static Logger *instance();
 
+    static LogLevel verbosity();
+    static void setVerbosity(LogLevel logLevel);
+
     static void error(const QString &message);
     static void warning(const QString &message);
     static void info(const QString &message);
     static void debug(const QString &message);
+    static void trace(const QString &message);
 
 signals:
     void logReceived(LogLevel logLevel, const QString &message);
