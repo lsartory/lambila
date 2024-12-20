@@ -54,6 +54,11 @@ enum class VhdlParser::State {
     SkipToSemicolon
 };
 
+enum class VhdlParser::Target {
+    Signal,
+    Constant
+};
+
 /******************************************************************************/
 
 class VhdlParser::Token : public QString {
@@ -105,10 +110,12 @@ bool VhdlParser::parse()
     Entity dummyEntity;
     Entity *currentEntity = &dummyEntity;
     Architecture *currentArchitecture = nullptr;
+    Target target = Target::Signal;
 
     QString name;
     QString direction;
     QString type;
+    QString value;
 
     // Open the source file
     const QString filePath = _sourceFile.canonicalFilePath();
@@ -243,14 +250,14 @@ bool VhdlParser::parse()
                 {
                     if (type.isEmpty())
                         goto unexpected;
-                    currentEntity->addPort(name, direction, type.trimmed());
+                    currentEntity->addPort(name, direction, type);
                     state.top() = State::EntityPortAssignment;
                 }
                 else if (token.is(';'))
                 {
                     if (type.isEmpty())
                         goto unexpected;
-                    currentEntity->addPort(name, direction, type.trimmed());
+                    currentEntity->addPort(name, direction, type);
                     state.pop();
                 }
                 else if (token.is(')'))
@@ -262,7 +269,7 @@ bool VhdlParser::parse()
                     }
                     else
                     {
-                        currentEntity->addPort(name, direction, type.trimmed());
+                        currentEntity->addPort(name, direction, type);
                         state.pop();
                         state.pop();
                     }
@@ -332,12 +339,14 @@ bool VhdlParser::parse()
                 break;
             case State::ArchitectureHeader:
                 if (token.is("signal"))
+                {
+                    target = Target::Signal;
                     state.push(State::ArchitectureSignal);
+                }
                 else if (token.is("constant"))
                 {
-                    // TODO: constant parsing
-                    errorString = "constant parsing is not implemented yet";
-                    goto error;
+                    target = Target::Constant;
+                    state.push(State::ArchitectureSignal);
                 }
                 else if (token.is("type"))
                 {
@@ -372,6 +381,7 @@ bool VhdlParser::parse()
                 {
                     name = token;
                     type = "";
+                    value = "";
                     state.top() = State::ArchitectureSignalType;
                     state.push(State::ExpectColon);
                 }
@@ -381,16 +391,17 @@ bool VhdlParser::parse()
             case State::ArchitectureSignalType:
                 if (token.is(':'))
                 {
-                    if (type.isEmpty())
+                    if (type.isEmpty() || parenCount != 0)
                         goto unexpected;
-                    currentArchitecture->addSignal(name, type.trimmed());
+                    if (target == Target::Signal)
+                        currentArchitecture->addSignal(name, type);
                     state.top() = State::ArchitectureSignalAssignment;
                 }
                 else if (token.is(';'))
                 {
-                    if (type.isEmpty())
+                    if (type.isEmpty() || parenCount != 0 || target == Target::Constant)
                         goto unexpected;
-                    currentArchitecture->addSignal(name, type.trimmed());
+                    currentArchitecture->addSignal(name, type);
                     state.pop();
                 }
                 else if (token.is(')'))
@@ -418,19 +429,30 @@ bool VhdlParser::parse()
             case State::ArchitectureSignalAssignment:
                 // Default assignments are ignored
                 if (token.is(';'))
-                    state.pop();
-                else if (token.is(')'))
                 {
                     if (parenCount != 0)
+                        goto unexpected;
+                    if (target == Target::Constant)
+                        currentArchitecture->addConstant(name, type, value);
+                    state.pop();
+                }
+                else if (token.is(')'))
+                {
+                    value += token;
+                    if (parenCount != 0)
                         parenCount -= 1;
-                    else
-                    {
-                        state.pop();
-                        state.pop();
-                    }
                 }
                 else if (token.is('('))
+                {
                     parenCount += 1;
+                    value += token;
+                }
+                else
+                {
+                    if (!value.endsWith('('))
+                        value += ' ';
+                    value += token;
+                }
                 break;
 
             /******************************************************************************/

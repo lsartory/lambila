@@ -184,7 +184,7 @@ bool Project::refresh()
 
     // TODO: build hierarchy
     Logger::debug("Found entities:");
-    for (auto entity : _design->entities())
+    for (auto entity : _design->getEntities())
         Logger::debug(entity->name());
     return true;
 }

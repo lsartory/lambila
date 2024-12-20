@@ -11,6 +11,7 @@ class VhdlParser : public QObject
 
 protected:
     enum class State;
+    enum class Target;
     class Token;
 
     QFileInfo _sourceFile;
