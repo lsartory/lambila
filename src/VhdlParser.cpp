@@ -393,7 +393,7 @@ bool VhdlParser::parse()
                 {
                     if (type.isEmpty() || parenCount != 0)
                         goto unexpected;
-                    if (target == Target::Signal)
+                    if (target == Target::Signal && currentArchitecture != nullptr)
                         currentArchitecture->addSignal(name, type);
                     state.top() = State::ArchitectureSignalAssignment;
                 }
@@ -401,7 +401,8 @@ bool VhdlParser::parse()
                 {
                     if (type.isEmpty() || parenCount != 0 || target == Target::Constant)
                         goto unexpected;
-                    currentArchitecture->addSignal(name, type);
+                    if (currentArchitecture != nullptr)
+                        currentArchitecture->addSignal(name, type);
                     state.pop();
                 }
                 else if (token.is(')'))

@@ -4,6 +4,26 @@
 #include "Design.h"
 
 #include <QFileInfo>
+#include <QProgressDialog>
+#include <QThread>
+
+class ProjectParserThread : public QThread
+{
+    Q_OBJECT
+
+protected:
+    QList<QFileInfo> _files;
+    Design *_design;
+
+public:
+    ProjectParserThread(QList<QFileInfo> files, Design *design, QObject *parent = nullptr);
+
+protected:
+    void run() override;
+
+signals:
+    void progressChanged(int progress);
+};
 
 class Project : public QObject
 {
@@ -15,6 +35,8 @@ private:
     bool _modified;
     QList<QFileInfo> _files;
     Design *_design;
+    ProjectParserThread *_thread;
+    QProgressDialog *_progressDialog;
 
 public:
     Project(QObject *parent = nullptr);
@@ -36,7 +58,10 @@ public:
     bool addFile(const QString &filePath);
     bool removeFile(const QString &filePath);
 
-    bool refresh();
+    void refresh();
+
+private slots:
+    void refreshComplete();
 
 signals:
     void modifiedChanged(bool modified);

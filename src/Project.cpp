@@ -19,11 +19,18 @@ Project::Project(QObject *parent) : QObject(parent)
 {
     _modified = false;
     _design = nullptr;
+    _thread = nullptr;
+    _progressDialog = nullptr;
+
 }
 
 Project::~Project()
 {
     delete _design;
+    if (_thread)
+        _thread->wait();
+    delete _thread;
+    delete _progressDialog;
 }
 
 QString Project::version()
@@ -55,7 +62,7 @@ void Project::setModified(bool modified)
 
 bool Project::open(const QString &filePath)
 {
-    // Open the file and parse it
+    // Open the project file and parse it
     QFile file(filePath);
     Logger::info(tr("Opening project %1").arg(filePath));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -173,18 +180,53 @@ bool Project::removeFile(const QString &filePath)
 
 /******************************************************************************/
 
-bool Project::refresh()
+ProjectParserThread::ProjectParserThread(QList<QFileInfo> files, Design *design, QObject *parent) : QThread(parent)
 {
+    _files = files;
+    _design = design;
+}
+
+void ProjectParserThread::run()
+{
+    // Parse all files sequentially
+    int progress = 0;
+    for (auto file : _files)
+    {
+        if (!VhdlParser(file, _design).parse())
+            break;
+        emit progressChanged(++progress);
+    }
+}
+
+void Project::refresh()
+{
+    // Create a new design
     delete _design;
     _design = new Design;
 
-    for (auto file : _files)
-        if (!VhdlParser(file, _design).parse())
-            break;
+    // Create a progress dialog to block the UI while refreshing
+    _progressDialog = new QProgressDialog(tr("Refreshing..."), "", 0, _files.count());
+    _progressDialog->setCancelButton(nullptr);
+    _progressDialog->setModal(true);
+    _progressDialog->show();
+
+    // Use a thread to parse all files
+    _thread = new ProjectParserThread(_files, _design, this);
+    connect(_thread, &ProjectParserThread::progressChanged, _progressDialog, &QProgressDialog::setValue);
+    connect(_thread, &QThread::finished, this, &Project::refreshComplete);
+    _thread->start();
+}
+
+void Project::refreshComplete()
+{
+    // Clean up
+    _thread->deleteLater();
+    _thread = nullptr;
+    _progressDialog->deleteLater();
+    _progressDialog = nullptr;
 
     // TODO: build hierarchy
     Logger::debug("Found entities:");
     for (auto entity : _design->getEntities())
         Logger::debug(entity->name());
-    return true;
 }
