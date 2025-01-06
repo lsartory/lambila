@@ -213,20 +213,17 @@ void Project::refresh()
     // Use a thread to parse all files
     _thread = new ProjectParserThread(_files, _design, this);
     connect(_thread, &ProjectParserThread::progressChanged, _progressDialog, &QProgressDialog::setValue);
-    connect(_thread, &QThread::finished, this, &Project::refreshComplete);
+    connect(_thread, &QThread::finished, [=] {
+        // Clean up
+        _thread->deleteLater();
+        _thread = nullptr;
+        _progressDialog->deleteLater();
+        _progressDialog = nullptr;
+
+        // TODO: build hierarchy
+        Logger::debug("Found entities:");
+        for (auto entity : _design->getEntities())
+            Logger::debug(entity->name());
+    });
     _thread->start();
-}
-
-void Project::refreshComplete()
-{
-    // Clean up
-    _thread->deleteLater();
-    _thread = nullptr;
-    _progressDialog->deleteLater();
-    _progressDialog = nullptr;
-
-    // TODO: build hierarchy
-    Logger::debug("Found entities:");
-    for (auto entity : _design->getEntities())
-        Logger::debug(entity->name());
 }

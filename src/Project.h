@@ -60,9 +60,6 @@ public:
 
     void refresh();
 
-private slots:
-    void refreshComplete();
-
 signals:
     void modifiedChanged(bool modified);
     void fileAdded(QFileInfo fi);
