@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "../ui/ui_MainWindow.h"
+#include "_GitCommitHash.h"
 
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -14,9 +15,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), _ui(new Ui::MainW
 
     _ui->setupUi(this);
 
+    // Disable tool bar context menus
+    _ui->menuBar->setContextMenuPolicy(Qt::PreventContextMenu);
+    _ui->toolBar->setContextMenuPolicy(Qt::PreventContextMenu);
+
     // Connect to the logger
     connect(Logger::instance(), &Logger::logReceived, this, &MainWindow::logReceived);
     Logger::info(tr("Lambila - v%1 started").arg(Project::version()));
+    Logger::debug(tr("Git commit: %1").arg(_GIT_COMMIT_HASH));
 
     // Restore the window sizes
     QSettings settings;
