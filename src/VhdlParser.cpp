@@ -47,6 +47,7 @@ enum class VhdlParser::State {
     ExpectClosingParenthesis,
     ExpectSemicolon,
     ExpectColon,
+    ExpectEqual,
 
     SkipToBegin = 0xB000,
     SkipToEnd,
@@ -212,6 +213,8 @@ bool VhdlParser::parse()
                     state.push(State::EntityPort);
                     state.push(State::ExpectOpeningParenthesis);
                 }
+                else if (token.is("attribute"))
+                    state.push(State::SkipToSemicolon);
                 else if (token.is("end"))
                     state.top() = State::SkipToSemicolon;
                 else
@@ -252,6 +255,7 @@ bool VhdlParser::parse()
                         goto unexpected;
                     currentEntity->addPort(name, direction, type);
                     state.top() = State::EntityPortAssignment;
+                    state.push(State::ExpectEqual);
                 }
                 else if (token.is(';'))
                 {
@@ -396,6 +400,7 @@ bool VhdlParser::parse()
                     if (target == Target::Signal && currentArchitecture != nullptr)
                         currentArchitecture->addSignal(name, type);
                     state.top() = State::ArchitectureSignalAssignment;
+                    state.push(State::ExpectEqual);
                 }
                 else if (token.is(';'))
                 {
@@ -506,6 +511,12 @@ bool VhdlParser::parse()
                 else
                     goto unexpected;
                 break;
+            case State::ExpectEqual:
+                if (token.is('='))
+                    state.pop();
+                else
+                    goto unexpected;
+                break;
 
             /******************************************************************************/
 
@@ -514,7 +525,7 @@ bool VhdlParser::parse()
                     state.pop();
                 break;
             case State::SkipToEnd:
-                if (token.is("end"))
+                if (token.is("end") || token.is("elsif"))
                     state.pop();
                 else if (token.is("begin") || token.is("then") || token.is("for"))
                     state.push(State::SkipToEnd);
