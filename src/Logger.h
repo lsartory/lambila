@@ -1,7 +1,18 @@
+/* Lambila | Logger.h
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
+/******************************************************************************/
+
 #include <QObject>
+
+/******************************************************************************/
 
 class Logger : public QObject
 {
@@ -39,4 +50,7 @@ public:
 signals:
     void logReceived(LogLevel logLevel, const QString &message);
 };
+
+/******************************************************************************/
+
 #endif // LOGGER_H

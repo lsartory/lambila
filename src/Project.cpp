@@ -1,3 +1,10 @@
+/* Lambila | Project.cpp
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #include "Logger.h"
 #include "Project.h"
 #include "VhdlParser.h"

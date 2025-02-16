@@ -1,3 +1,10 @@
+/* Lambila | Design.h
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #ifndef DESIGN_H
 #define DESIGN_H
 

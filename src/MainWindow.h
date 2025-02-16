@@ -1,14 +1,27 @@
+/* Lambila | MainWindow.h
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+
+/******************************************************************************/
 
 #include "Logger.h"
 #include "Project.h"
 
 #include <QMainWindow>
 
+/******************************************************************************/
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+/******************************************************************************/
 
 class MainWindow : public QMainWindow
 {
@@ -50,4 +63,7 @@ private slots:
 
     void logReceived(Logger::LogLevel logLevel, const QString &message);
 };
+
+/******************************************************************************/
+
 #endif // MAINWINDOW_H

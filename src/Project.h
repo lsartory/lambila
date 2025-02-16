@@ -1,11 +1,22 @@
+/* Lambila | Project.h
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #ifndef PROJECT_H
 #define PROJECT_H
+
+/******************************************************************************/
 
 #include "Design.h"
 
 #include <QFileInfo>
 #include <QProgressDialog>
 #include <QThread>
+
+/******************************************************************************/
 
 class ProjectParserThread : public QThread
 {
@@ -24,6 +35,8 @@ protected:
 signals:
     void progressChanged(int progress);
 };
+
+/******************************************************************************/
 
 class Project : public QObject
 {
@@ -65,4 +78,7 @@ signals:
     void fileAdded(QFileInfo fi);
     void fileRemoved(QFileInfo fi);
 };
+
+/******************************************************************************/
+
 #endif // PROJECT_H

@@ -1,3 +1,10 @@
+/* Lambila | MainWindow.cpp
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #include "MainWindow.h"
 #include "../ui/ui_MainWindow.h"
 #include "_GitCommitHash.h"

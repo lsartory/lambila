@@ -1,9 +1,20 @@
+/* Lambila | VhdlParser.h
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #ifndef VHDLPARSER_H
 #define VHDLPARSER_H
+
+/******************************************************************************/
 
 #include "Design.h"
 
 #include <QFileInfo>
+
+/******************************************************************************/
 
 class VhdlParser : public QObject
 {
@@ -22,4 +33,7 @@ public:
 
     bool parse();
 };
+
+/******************************************************************************/
+
 #endif // VHDLPARSER_H

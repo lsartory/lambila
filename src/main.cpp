@@ -1,3 +1,10 @@
+/* Lambila | main.cpp
+ * Copyright (c) 2025 L. Sartory
+ * SPDX-License-Identifier: MIT
+ */
+
+/******************************************************************************/
+
 #include "MainWindow.h"
 
 #include <QApplication>
