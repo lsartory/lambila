@@ -58,6 +58,7 @@ enum class VhdlParser::State {
 
     SkipToBegin = 0xB000,
     SkipToEnd,
+    SkipToStringEnd,
     SkipToClosingParenthesis,
     SkipToSemicolon
 };
@@ -368,21 +369,18 @@ bool VhdlParser::parse()
                 else if (token.is("function") || token.is("procedure"))
                 {
                     // Ignore functions
-                    state.push(State::SkipToSemicolon);
                     state.push(State::SkipToEnd);
                     state.push(State::SkipToBegin);
                 }
                 else if (token.is("component"))
                 {
                     // Ignore components
-                    state.push(State::SkipToSemicolon);
                     state.push(State::SkipToEnd);
                 }
                 else if (token.is("begin"))
                 {
                     // TODO: architecture body
-                    state.top() = State::SkipToSemicolon;
-                    state.push(State::SkipToEnd);
+                    state.top() = State::SkipToEnd;
                 }
                 else
                     goto unexpected;
@@ -532,10 +530,18 @@ bool VhdlParser::parse()
                     state.pop();
                 break;
             case State::SkipToEnd:
-                if (token.is("end") || token.is("elsif"))
+                if (token.is("end"))
+                    state.top() = State::SkipToSemicolon;
+                else if (token.is("elsif"))
                     state.pop();
-                else if (token.is("begin") || token.is("then") || token.is("for"))
+                else if (token.is("begin") || token.is("then") || token.is("for") || token.is("case"))
                     state.push(State::SkipToEnd);
+                else if ((token.count('"') & 1) != 0)
+                    state.push(State::SkipToStringEnd);
+                break;
+            case State::SkipToStringEnd:
+                if ((token.count('"') & 1) != 0)
+                    state.pop();
                 break;
             case State::SkipToClosingParenthesis:
                 if (token.is(')'))
