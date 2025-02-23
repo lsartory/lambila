@@ -106,6 +106,7 @@ void MainWindow::projectOpen(QString filePath)
     const QFileInfo fi = _project->projectFile();
     setLastPath(fi.filePath());
     setWindowTitle(tr("%1 - Lambila").arg(fi.fileName()));
+    on_refreshButton_clicked();
 }
 
 bool MainWindow::projectSaveAs()
