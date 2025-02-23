@@ -51,6 +51,7 @@ private slots:
     void on_fileTreeWidget_itemSelectionChanged();
 
     void on_fileAddButton_clicked();
+    void on_folderAddButton_clicked();
     void on_fileRemoveButton_clicked();
 
     void on_refreshButton_clicked();

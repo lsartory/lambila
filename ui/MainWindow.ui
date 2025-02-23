@@ -62,11 +62,22 @@
            <item>
             <widget class="QPushButton" name="fileAddButton">
              <property name="text">
-              <string>&amp;Add file</string>
+              <string>&amp;Add file...</string>
              </property>
              <property name="icon">
               <iconset theme="list-add" resource="../resources/resources.qrc">
                <normaloff>:/icons/list-add.svg</normaloff>:/icons/list-add.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="folderAddButton">
+             <property name="text">
+              <string>Add &amp;folder...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
              </property>
             </widget>
            </item>
@@ -247,6 +258,15 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>fileTreeWidget</tabstop>
+  <tabstop>fileAddButton</tabstop>
+  <tabstop>folderAddButton</tabstop>
+  <tabstop>fileRemoveButton</tabstop>
+  <tabstop>hierarchyTreeWidget</tabstop>
+  <tabstop>refreshButton</tabstop>
+  <tabstop>logTextEdit</tabstop>
+ </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>
  </resources>

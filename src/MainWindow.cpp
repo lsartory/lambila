@@ -10,6 +10,7 @@
 #include "_GitCommitHash.h"
 
 #include <QCloseEvent>
+#include <QDirIterator>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
@@ -240,6 +241,18 @@ void MainWindow::on_fileAddButton_clicked()
     const QStringList filePaths = QFileDialog::getOpenFileNames(this, tr("Select file(s) to add"), lastPath(), tr("VHDL files (*.vhd *.vhdl);;Verilog files (*.v)"));
     for (const QString &filePath : filePaths)
     {
+        _project->addFile(filePath);
+        setLastPath(filePath);
+    }
+}
+
+void MainWindow::on_folderAddButton_clicked()
+{
+    const QString folderPath = QFileDialog::getExistingDirectory(this, tr("Select folder to add"), lastPath());
+    QDirIterator it(folderPath, QStringList() << "*.vhd" << "*.vhdl" << "*.v", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext())
+    {
+        const QString filePath = it.next();
         _project->addFile(filePath);
         setLastPath(filePath);
     }
